@@ -1,0 +1,47 @@
+#!/bin/bash
+
+error=False
+if [[ $# != 1 ]]; then error=True; fi
+if [[ $error == True ]]; then echo "Error, trackmania initializer was started with wrong params, make sure it starts with you're PC name!"; fi
+if [[ $error == True ]]; then exit; fi 
+
+if [[ ! -d /C/Users/$1 ]]; then error=True; fi
+if [[ $error == True ]]; then echo "Error, trackmania initializer was started with wrong params, make sure it starts with you're PC name!"; fi
+if [[ $error == True ]]; then exit; fi 
+
+if [[ ! -f /C/Users/$1/TmrlData/config/config.json ]]; then error=True; fi
+if [[ $error == True ]]; then echo "Error, trackmania initializer didn't find the TmrlData/config.json file, make sure it exists!"; fi
+if [[ $error == True ]]; then exit; fi 
+
+TM_PROCESS_NAME="Trackmania.exe"
+
+is_tm_running() {
+    tasklist | grep -i "$TM_PROCESS_NAME" > /dev/null 2>&1
+}
+
+if [[ ! is_tm_running ]]; then error=True; fi
+if [[ $error == True ]]; then echo "Make sure trackmania is running!"; fi
+if [[ $error == True ]]; then exit; fi 
+
+echo -e "Found active Trackmania process\n"
+
+TMRL_FOLDER="C:/Users/$1/TmrlData"
+CONFIG="$TMRL_FOLDER/config/config.json"
+line_to_change=`grep "RUN_NAME" $CONFIG`
+number=$(echo "$line_to_change" | grep -oP '_\K\d+(?=")')
+new_number=$((number + 1))
+
+echo -e "==================================\nCurrent Test: $new_number\n==================================\n"
+
+sed -i -E "/RUN_NAME/ s/(_)[0-9]+(\")/\1${new_number}\2/" "$CONFIG"
+
+echo "Starting Central Server..."
+cmd.exe //c start "TMRL Server" powershell -NoExit -Command "\$env:TMRL_FOLDER='$TMRL_FOLDER'; python -m tmrl --server"
+
+echo "Starting Trainer Server..."
+cmd.exe //c start "TMRL Trainer" powershell -NoExit -Command "\$env:TMRL_FOLDER='$TMRL_FOLDER'; python -m tmrl --trainer --wandb"
+
+echo "Starting Rollout Worker..."
+cmd.exe //c start "TMRL Worker" powershell -NoExit -Command "\$env:TMRL_FOLDER='$TMRL_FOLDER'; python -m tmrl --worker"
+
+echo "Everything is running. Metrics on https://wandb.ai"

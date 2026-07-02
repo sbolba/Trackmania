@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Shutdown starting..."
+
+# Close every powershell window by its title
+taskkill //FI "WINDOWTITLE eq TMRL Server" //F > /dev/null 2>&1
+taskkill //FI "WINDOWTITLE eq TMRL Trainer" //F > /dev/null 2>&1
+taskkill //FI "WINDOWTITLE eq TMRL Worker" //F > /dev/null 2>&1
+taskkill //FI "WINDOWTITLE eq TMRL TensorBoard" //F > /dev/null 2>&1
+echo "Shutdown completed."
