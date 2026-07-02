@@ -42,7 +42,22 @@ Before starting a training session, make sure the following conditions are met.
 
 ---
 
-## 3. Configuration (`config.json`)
+## 3. Installation
+
+Run the following commands once, before the first training session.
+
+| Step | Command | Notes |
+| :--- | :--- | :--- |
+| 1. Install Python dependencies | `pip install -r requirements.txt` | Installs `tmrl`, `torch`, `wandb`, and the other required packages. |
+| 2. Initialize TMRL | `python -m tmrl --install` | Creates the `TmrlData` folder in your user profile and installs the `ViGEmBus` virtual gamepad driver. Accept the driver installation prompt when it appears. |
+| 3. Install Openplanet | Download from [openplanet.dev](https://openplanet.dev/) | Point the installer to your Trackmania installation folder (containing `Trackmania.exe`). |
+| 4. Copy the TMRL plugin | Copy the plugin from `TmrlData\resources\` into `OpenplanetNext\Plugins\` | Required for Trackmania to communicate with TMRL. Reload plugins in-game (`F3 > Developer > Reload plugins`) if Trackmania is already open. |
+
+> **Note.** If the `OpenplanetNext` or `TmrlData` folders were moved from their default location (e.g. into the project folder), make sure the corresponding directory junctions are in place, otherwise Openplanet will not be able to load the plugin.
+
+---
+
+## 4. Configuration (`config.json`)
 
 The configuration file is located at:
 
@@ -67,13 +82,13 @@ The table below lists the settings that must be reviewed or edited before traini
 
 ---
 
-## 4. Running the Project
+## 5. Running the Project
 
 Both starting and stopping the project are handled through two dedicated scripts, which wrap the individual TMRL commands described in Section 1.
 
 | Action | Command | Notes |
 | :--- | :--- | :--- |
-| **Start** | `./initialize {Account_name}` | `$1` is the name of the currently active user folder inside `Users` (e.g. `Lorenzo`). Trackmania must already be open, with a track loaded, before running this command. |
+| **Start** | `./initialize [$1]` | `$1` is the name of the currently active user folder inside `Users` (e.g. `Lorenzo`). Trackmania must already be open, with a track loaded, before running this command. |
 | **Shutdown** | `./shutdown` | Stops the Rollout Worker, the Trainer, and the Central Server in the correct order, avoiding corrupted checkpoints and orphaned connections. |
 
 ### What `./initialize` Does
@@ -103,3 +118,15 @@ https://wandb.ai/<WANDB_ENTITY>/<WANDB_PROJECT>
 ```
 
 ---
+
+## 6. Observation Structure (LIDAR Mode)
+
+The observation vector sent to the policy network is composed of the following elements.
+
+| Element | Description |
+| :--- | :--- |
+| **LIDAR beams** | 19 normalized distance values, representing the distance to the track border along 19 directions in front of the car. |
+| **Speed** | The current speed of the car, in km/h. |
+| **Action history** | The last actions taken (steering, throttle, brake), providing temporal stability to the policy. |
+
+The default policy network is a 3-layer MLP (`[256, 256, 256]`), which is lightweight enough to train on a consumer GPU.
